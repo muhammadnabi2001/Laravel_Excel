@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Console\Commands\ExportUsers;
+use App\Exports\UsersExport;
 use App\Http\Controllers\Controller;
+use App\Jobs\DownloadUsers;
 use App\Jobs\UserCreate;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -32,23 +35,8 @@ class UserController extends Controller
         UserCreate::dispatch($data);
         return redirect('/users')->with('success', "Ma'lumot muvaffaqiyatli qo'shildi!");
     }
-
     public function exportUsers()
     {
-        $users = User::all();
-
-        $usersArray = $users->map(function ($user) {
-            return [
-                'Name' => $user->name,
-                'Email' => $user->email,
-                'Created At' => $user->created_at,
-            ];
-        })->toArray();
-
-        return Excel::download(function ($excel) use ($usersArray) {
-            $excel->sheet('Users', function ($sheet) use ($usersArray) {
-                $sheet->fromArray($usersArray, null, 'A1', false, false);
-            });
-        }, 'users.xlsx');
+       return Excel::download(new UsersExport, "users-all.xlsx");
     }
 }
